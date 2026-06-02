@@ -6,19 +6,24 @@ const app = express();
 app.use(express.json()); // Allows our backend to read JSON data sent from a frontend
 app.use(cors());         // Enables cross-origin requests for your frontend practice files
 
-// 1. Connect to your MAMP database
-const db = mysql.createConnection({
-  host: '127.0.0.1',
-  port: 3307,        // Matches your MAMP port perfectly
-  user: 'root',
-  password: 'root',
-  database: 'my_project_db' 
-});
+// 1. Connect to your database (Uses Cloud Database on Render, falls back to MAMP locally)
+const db = mysql.createConnection(
+  process.env.DATABASE_URL || {
+    host: '127.0.0.1',
+    port: 3307,        // Matches your MAMP port perfectly
+    user: 'root',
+    password: 'root',
+    database: 'my_project_db' 
+  }
+);
 
 // Connect to MySQL and automatically set up all tables
 db.connect((err) => {
-  if (err) throw err;
-  console.log('Connected to my_project_db!');
+  if (err) {
+    console.error('Database connection failed:', err.message);
+    return;
+  }
+  console.log('Connected to the database!');
 
   // TABLE 1: Users Table SQL
   const createUsersTable = `
@@ -159,7 +164,8 @@ app.delete('/api/tasks/:id', (req, res) => {
   });
 });
 
-// Start the backend server on port 5000
-app.listen(5000, () => {
-  console.log('Backend server is running offline on http://localhost:5000');
+// Dynamic Port Assignment for Deployment
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running smoothly on port ${PORT}`);
 });
